@@ -159,6 +159,7 @@ void PrintingData(ref double [,] result)
     {
         for (int j = 0, resultCols = result.GetLength(1); j < resultCols; j++)
         {
+            // For allignment
             string messeage = String.Format("{0,8}\t", result[i, j]);
             Console.Write(messeage);
         }
