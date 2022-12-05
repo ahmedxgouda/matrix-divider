@@ -2,11 +2,10 @@
 {
     class Program
     {
-        public static int rows;
-        public static int cols;
         static void Main()
         {
             Console.WriteLine("Welcome to matrix-divider.\nWe will divide two matrices you choose.");
+            int rows, cols;
             while (true)
             {
                 try
@@ -22,21 +21,16 @@
                     Console.WriteLine("Wrong input.");
                 }
             }
-            if (rows != cols)
-            {
-                Console.WriteLine("Collumns and rows must be equal.");
-                return;
-            }
             // Initializing arrays
             double [,] arr1 = new double [rows, cols];
             double [,] arr2 = new double [rows, cols];
-            double [,] identity = new double [rows, cols];
+            double [,] identity;
             double [,] output;
 
             // Calling functions
             GettingData(ref arr1, "first");
             GettingData(ref arr2, "second");
-            MakeIdentity(ref identity);
+            MakeIdentity(out identity, arr2.GetLength(0), arr2.GetLength(1));
             Inverse(ref arr2, identity);
             Multiply(ref arr1, ref arr2, out output);
             PrintingData(ref output);
@@ -45,9 +39,9 @@
         public static void GettingData(ref double [,] arr, string order)
         {
             Console.WriteLine($"---The {order} matrix---");
-            for (int i = 0; i < rows; i++)
+            for (int i = 0, rows = arr.GetLength(0); i < rows; i++)
             {
-                for (int j = 0; j < cols; j++)
+                for (int j = 0, cols = arr.GetLength(1); j < cols; j++)
                 {
                     while (true)
                     {
@@ -67,9 +61,10 @@
             }
         }
 
-        // Creating the unity matrix
-        public static void MakeIdentity(ref double [,] arr)
+        // Creating the Identity matrix
+        public static void MakeIdentity(out double [,] arr, int rows, int cols)
         {
+            arr = new double [rows, cols];
             for (int i = 0; i < rows; i++)
             {
                 for (int j = 0; j < cols; j++)
@@ -128,7 +123,7 @@
         public static void elimination(int type, int i, double multiply, ref double [,] arr)
         {
             
-            for (int j = 0; j < cols * 2; j++)
+            for (int j = 0, cols = arr.GetLength(1); j < cols; j++)
             {
             // the argument, type is here to define what we want to do,
             // iterates from top to bottom or otherwise
@@ -139,10 +134,12 @@
         }
 
         // Getting the inverse of the second matrix to multiply it with the first.
-        public static void Inverse(ref double [,] arr, double [,] unity)
+        public static void Inverse(ref double [,] arr, double [,] identity)
         {
             // Preparing the array for gauss-jordan elemination method
-            // Appending unity elements
+            // Appending identity elements
+            int rows = arr.GetLength(0);
+            int cols = arr.GetLength(1);
             double [,] mixedArr = new double [rows, cols * 2];
             for (int i = 0; i < rows; i++)
             {
@@ -152,7 +149,7 @@
                 }
                 for (int k = cols; k < cols * 2; k++)
                 {
-                    mixedArr[i, k] = unity[i, k - cols];
+                    mixedArr[i, k] = identity[i, k - cols];
                 }
             }
 
@@ -182,7 +179,7 @@
                 {
                     // mixedArr[i, i] is any element in the main diagonal
                     // We divide by it, to convert the diagonal elements to ones.
-                    // So, we get the unity matrix in the left side of the mixedArr
+                    // So, we get the identity matrix in the left side of the mixedArr
                     // therefore, we get the inverse of the matrix successfully.
                     arr[i, j - cols] = mixedArr[i, j] / mixedArr[i, i];
                     if (arr[i, j - cols] == double.NaN)
