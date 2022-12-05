@@ -7,11 +7,21 @@
         static void Main()
         {
             Console.WriteLine("Welcome to matrix-divider.\nWe will divide two matrices you choose.");
-
-            Console.Write("Enter rows: ");
-            rows = Convert.ToInt32(Console.ReadLine());
-            Console.Write("Enter columns: ");
-            cols = Convert.ToInt32(Console.ReadLine());
+            while (true)
+            {
+                try
+                {
+                    Console.Write("Enter rows: ");
+                    rows = Convert.ToInt32(Console.ReadLine());
+                    Console.Write("Enter columns: ");
+                    cols = Convert.ToInt32(Console.ReadLine());
+                    break;
+                }
+                catch 
+                {
+                    Console.WriteLine("Wrong input.");
+                }
+            }
             if (rows != cols)
             {
                 Console.WriteLine("Collumns and rows must be equal.");
@@ -20,14 +30,14 @@
             // Initializing arrays
             double [,] arr1 = new double [rows, cols];
             double [,] arr2 = new double [rows, cols];
-            double [,] unity = new double [rows, cols];
+            double [,] identity = new double [rows, cols];
             double [,] output;
 
             // Calling functions
             GettingData(ref arr1, "first");
             GettingData(ref arr2, "second");
-            MakeUnity(ref unity);
-            Inverse(ref arr2, unity);
+            MakeIdentity(ref identity);
+            Inverse(ref arr2, identity);
             Multiply(ref arr1, ref arr2, out output);
             PrintingData(ref output);
         }
@@ -39,15 +49,26 @@
             {
                 for (int j = 0; j < cols; j++)
                 {
-                    Console.Write($"Enter element[{i + 1}, {j + 1}]: ");
-                    arr[i, j] = Convert.ToInt32(Console.ReadLine());
+                    while (true)
+                    {
+                        try
+                        {
+                            Console.Write($"Enter element[{i + 1}, {j + 1}]: ");
+                            arr[i, j] = Convert.ToInt32(Console.ReadLine());
+                            break;
+                        }
+                        catch
+                        {
+                            Console.WriteLine("Wrong input.");
+                        }
+                    }
                 }
                 Console.WriteLine();
             }
         }
 
         // Creating the unity matrix
-        public static void MakeUnity(ref double [,] arr)
+        public static void MakeIdentity(ref double [,] arr)
         {
             for (int i = 0; i < rows; i++)
             {
@@ -60,6 +81,60 @@
 
                     }
                 }
+            }
+        }
+
+        // Exit the program if the second matrix does not have an inverse
+        public static void Exit()
+        {
+            Console.WriteLine("Couldn't complete the division. Second matrix does not have an inverse.");
+            System.Environment.Exit(1);
+        }
+
+        // If there is a zero in the first diagonal element
+        public static void Swap(ref double [,] arr)
+        {
+            if (arr[0, 0] == 0d)
+            {
+                double tmp;
+                int arrRows = arr.GetLength(0);
+
+                for (int i = 0; i < arrRows; i++)
+                {
+                    for (int k = i + 1; k < arrRows; k++)
+                    {
+                        for (int j = 0, arrCols = arr.GetLength(1); j < arrCols; j++)
+                        {
+                            tmp = arr[i, j];
+                            arr[i, j] = arr[k, j];
+                            arr[k, j] = tmp;
+                        }
+
+                        if (arr[0, 0] != 0d)
+                        {
+                            goto Finish;
+                        }
+                    }
+                }
+                if (arr[0, 0] == 0d)
+                {
+                    Exit();
+                }
+            }
+            Finish:
+                return;
+        }
+        // Doing gauss-jordan elimination
+        public static void elimination(int type, int i, double multiply, ref double [,] arr)
+        {
+            
+            for (int j = 0; j < cols * 2; j++)
+            {
+            // the argument, type is here to define what we want to do,
+            // iterates from top to bottom or otherwise
+            arr[type, j] -= arr[i, j] *
+            (multiply / arr[i, i]);
+
             }
         }
 
@@ -81,27 +156,7 @@
                 }
             }
 
-            // Doing gauss-jordan elimination
-            void elimination(int type, int i, double multiply)
-            {
-                for (int j = 0; j < cols * 2; j++)
-                {
-                    try
-                    {
-                    // the argument, type is here to define what we want to do,
-                    // iterates from top to bottom or otherwise
-                    mixedArr[type, j] -= mixedArr[i, j] *
-                    (multiply / mixedArr[i, i]);
-                    }
-                    catch
-                    {
-                        Console.WriteLine("Can't find the inverse of this matrix.");
-                        Console.WriteLine("Please, enter valid data.");
-                        return;
-                    }
-                }
-            }
-            
+            Swap(ref mixedArr);
             for (int i = 0; i < rows; i++)
             {
                 // For every single row after the row which iterates
@@ -110,14 +165,14 @@
                     // assigining it to a variable because its value changes after
                     // first iteration and we want the original value not the modified
                     double value = mixedArr[k, i];
-                    elimination(k ,i , value);
+                    elimination(k ,i , value, ref mixedArr);
                 }
                 // This for rows before the iterating row
                 for (int k = 0; k < i; k++)
                 {
                     // same as above
                     double value = mixedArr[k, i];
-                    elimination(k ,i , value);            
+                    elimination(k ,i , value, ref mixedArr);            
                 }
             }  
             // Updating the array
@@ -130,6 +185,10 @@
                     // So, we get the unity matrix in the left side of the mixedArr
                     // therefore, we get the inverse of the matrix successfully.
                     arr[i, j - cols] = mixedArr[i, j] / mixedArr[i, i];
+                    if (arr[i, j - cols] == double.NaN)
+                    {
+                        Exit();
+                    }
                 }
             }
         }
@@ -168,7 +227,7 @@
                 for (int j = 0, resultCols = result.GetLength(1); j < resultCols; j++)
                 {
                     // For allignment
-                    string messeage = String.Format("{0,8}\t", result[i, j]);
+                    string messeage = String.Format("{0,-8}\t", Math.Round(result[i, j], 3));
                     Console.Write(messeage);
                 }
                 Console.WriteLine();
